@@ -3,8 +3,8 @@ import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import GalleryPreview from "@/components/GalleryPreview";
 import DropsPreview from "@/components/DropsPreview";
-import CommissionsCTA from "@/components/CommissionsCTA";
 import Footer from "@/components/Footer";
+import ScrollProgress from "@/components/ScrollProgress";
 
 const Index = () => {
   return (
@@ -13,6 +13,7 @@ const Index = () => {
       <GrainOverlay />
       <CursorGlow />
       <OrganicShapes />
+      <ScrollProgress />
 
       {/* Navigation */}
       <Navigation />
@@ -22,7 +23,6 @@ const Index = () => {
         <HeroSection />
         <GalleryPreview />
         <DropsPreview />
-        <CommissionsCTA />
       </main>
 
       {/* Footer */}
