@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { GrainOverlay, CursorGlow, OrganicShapes } from "@/components/VisualEffects";
+import { DarkVignette, CursorGlow } from "@/components/VisualEffects";
+import MysticalAtmosphere from "@/components/MysticalAtmosphere";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
@@ -46,10 +47,10 @@ const Gallery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <GrainOverlay />
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <MysticalAtmosphere />
+      <DarkVignette />
       <CursorGlow />
-      <OrganicShapes />
       <Navigation />
 
       <main className="pt-32 pb-20">

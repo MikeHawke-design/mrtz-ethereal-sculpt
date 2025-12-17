@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, Bell, CheckCircle } from "lucide-react";
-import { GrainOverlay, CursorGlow, OrganicShapes } from "@/components/VisualEffects";
+import { DarkVignette, CursorGlow } from "@/components/VisualEffects";
+import MysticalAtmosphere from "@/components/MysticalAtmosphere";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
@@ -18,7 +19,7 @@ const drops = [
     id: 1,
     image: sculpture3,
     title: "The Awakening",
-    edition: 10,
+    edition: 25,
     price: 2500,
     status: "upcoming",
     dropDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -28,7 +29,7 @@ const drops = [
     id: 2,
     image: sculpture1,
     title: "Biomech Series I",
-    edition: 5,
+    edition: 50,
     price: 4500,
     status: "upcoming",
     dropDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -38,8 +39,8 @@ const drops = [
     id: 3,
     image: sculpture4,
     title: "Shadow Fragment",
-    edition: 15,
-    sold: 15,
+    edition: 25,
+    sold: 25,
     price: 1800,
     status: "sold_out",
     dropDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -49,8 +50,8 @@ const drops = [
     id: 4,
     image: sculpture2,
     title: "Vessel Collection",
-    edition: 8,
-    sold: 5,
+    edition: 50,
+    sold: 47,
     price: 3200,
     status: "available",
     remaining: 3,
@@ -119,10 +120,10 @@ const Drops = () => {
   const pastDrops = drops.filter(d => d.status === "sold_out");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <GrainOverlay />
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <MysticalAtmosphere />
+      <DarkVignette />
       <CursorGlow />
-      <OrganicShapes />
       <Navigation />
 
       <main className="pt-32 pb-20">
