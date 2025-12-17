@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const GrainOverlay = () => {
+const DarkVignette = () => {
   return (
-    <div className="grain-overlay" aria-hidden="true" />
+    <div 
+      className="fixed inset-0 pointer-events-none z-[1]" 
+      aria-hidden="true"
+      style={{
+        background: `
+          radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, hsl(var(--background)) 100%),
+          linear-gradient(to bottom, hsl(var(--background) / 0.3) 0%, transparent 20%, transparent 80%, hsl(var(--background) / 0.5) 100%)
+        `,
+      }}
+    />
   );
 };
 
@@ -91,4 +100,4 @@ const OrganicShapes = () => {
   );
 };
 
-export { GrainOverlay, CursorGlow, OrganicShapes };
+export { DarkVignette, CursorGlow, OrganicShapes };
