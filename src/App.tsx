@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import PageTransition from "./components/PageTransition";
 import LoadingScreen from "./components/LoadingScreen";
+import CustomCursor from "./components/CustomCursor";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <LoadingScreen />
+      <CustomCursor />
       <BrowserRouter>
         <AnimatePresence mode="wait">
           <Routes>

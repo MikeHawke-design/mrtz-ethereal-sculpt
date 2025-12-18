@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import sculpture1 from "@/assets/sculpture-1.jpg";
 import sculpture2 from "@/assets/sculpture-2.jpg";
+import processVideo from "@/assets/process-video.mp4";
 
 const exhibitions = [
   { year: "2024", title: "Shadows & Bones", venue: "Dark Arts Gallery, Berlin" },
@@ -137,6 +138,54 @@ const About = () => {
                 </div>
               </RevealOnScroll>
             </div>
+          </section>
+
+          {/* Video Section */}
+          <section className="mb-32">
+            <RevealOnScroll className="text-center mb-16">
+              <span className="text-xs tracking-[0.3em] uppercase text-primary font-body block mb-4">
+                Behind the Scenes
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl font-light">A Glimpse into Creation</h2>
+            </RevealOnScroll>
+
+            <RevealOnScroll>
+              <div className="relative max-w-4xl mx-auto">
+                <motion.div
+                  className="relative aspect-video overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <video
+                    src={processVideo}
+                    className="w-full h-full object-cover"
+                    controls
+                    playsInline
+                    preload="metadata"
+                    poster={sculpture1}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {/* Decorative frame */}
+                  <div className="absolute -inset-4 border border-border/30 -z-10" />
+                  <div className="absolute -inset-8 border border-border/10 -z-20" />
+                </motion.div>
+                
+                <motion.p
+                  className="text-center text-muted-foreground font-body mt-8 max-w-xl mx-auto"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                >
+                  Watch the hands at work as raw materials transform into something eternal.
+                  Each sculpture carries hours of meticulous craft and unwavering intention.
+                </motion.p>
+              </div>
+            </RevealOnScroll>
           </section>
 
           {/* Exhibitions */}
