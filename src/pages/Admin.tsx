@@ -11,7 +11,10 @@ import {
   Save,
   Eye,
   X,
-  Upload
+  Settings,
+  Instagram,
+  Mail,
+  Video
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,51 +22,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import MRTZLogo from "@/components/MRTZLogo";
+import ImageUploader from "@/components/admin/ImageUploader";
+import { 
+  PortfolioItem, 
+  Drop, 
+  SiteSettings,
+  MediaItem,
+  DEFAULT_SETTINGS,
+  DEFAULT_PORTFOLIO,
+  DEFAULT_DROPS
+} from "@/types/admin";
 
-// Types
-interface PortfolioItem {
-  id: string;
-  image: string;
-  title: string;
-  year: string;
-  category: string;
-  description: string;
-  isVideo?: boolean;
-  videoSrc?: string;
-}
-
-interface Drop {
-  id: string;
-  image: string;
-  title: string;
-  edition: number;
-  price: number;
-  status: "upcoming" | "available" | "sold_out";
-  dropDate: string;
-  description: string;
-  remaining?: number;
-}
-
-const ADMIN_PASSWORD = "mrtz2024"; // In production, use proper auth
+const ADMIN_PASSWORD = "mrtz2024";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"portfolio" | "drops">("portfolio");
+  const [activeTab, setActiveTab] = useState<"portfolio" | "drops" | "settings">("portfolio");
   
-  // Portfolio state
-  const [portfolioItems, setPortfolioItems] = useLocalStorage<PortfolioItem[]>("mrtz-portfolio", [
-    { id: "1", image: "/src/assets/sculpture-1.jpg", title: "Emergence I", year: "2024", category: "Biomechanical", description: "A meditation on organic and mechanical fusion." },
-    { id: "2", image: "/src/assets/sculpture-2.jpg", title: "Vessel of Shadows", year: "2024", category: "Organic Forms", description: "Inspired by deep-sea creatures." },
-    { id: "3", image: "/src/assets/sculpture-3.jpg", title: "Silent Sentinel", year: "2023", category: "Figurative", description: "A guardian figure emerging from darkness." },
-    { id: "4", image: "/src/assets/sculpture-4.jpg", title: "Nocturne", year: "2024", category: "Abstract", description: "Pure form dancing with shadow." },
-  ]);
-  
-  // Drops state
-  const [drops, setDrops] = useLocalStorage<Drop[]>("mrtz-drops", [
-    { id: "1", image: "/src/assets/sculpture-3.jpg", title: "The Awakening", edition: 25, price: 2500, status: "upcoming", dropDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), description: "Limited edition series." },
-    { id: "2", image: "/src/assets/sculpture-1.jpg", title: "Biomech Series I", edition: 50, price: 1800, status: "available", remaining: 23, dropDate: "", description: "The first in a series of biomechanical explorations." },
-  ]);
+  const [portfolioItems, setPortfolioItems] = useLocalStorage<PortfolioItem[]>("mrtz-portfolio-v2", DEFAULT_PORTFOLIO);
+  const [drops, setDrops] = useLocalStorage<Drop[]>("mrtz-drops-v2", DEFAULT_DROPS);
+  const [siteSettings, setSiteSettings] = useLocalStorage<SiteSettings>("mrtz-settings", DEFAULT_SETTINGS);
 
   const [editingItem, setEditingItem] = useState<PortfolioItem | Drop | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -116,6 +95,11 @@ const Admin = () => {
     toast({ title: "Saved" });
   };
 
+  const saveSettings = (settings: SiteSettings) => {
+    setSiteSettings(settings);
+    toast({ title: "Settings saved" });
+  };
+
   // Login Screen
   if (!isAuthenticated) {
     return (
@@ -145,6 +129,10 @@ const Admin = () => {
               Login
             </Button>
           </form>
+          
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            Password: mrtz2024
+          </p>
         </motion.div>
       </div>
     );
@@ -154,7 +142,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border p-4">
+      <header className="border-b border-border p-4 sticky top-0 bg-background/95 backdrop-blur z-40">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <MRTZLogo size="sm" animated={false} />
@@ -174,140 +162,153 @@ const Admin = () => {
       </header>
 
       {/* Tabs */}
-      <div className="border-b border-border">
-        <div className="container mx-auto flex gap-8 px-4">
-          <button
-            onClick={() => setActiveTab("portfolio")}
-            className={`py-4 text-sm tracking-[0.1em] uppercase transition-colors relative ${
-              activeTab === "portfolio" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Image className="w-4 h-4" />
-              Portfolio
-            </span>
-            {activeTab === "portfolio" && (
-              <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("drops")}
-            className={`py-4 text-sm tracking-[0.1em] uppercase transition-colors relative ${
-              activeTab === "drops" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Drops
-            </span>
-            {activeTab === "drops" && (
-              <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
+      <div className="border-b border-border sticky top-[65px] bg-background/95 backdrop-blur z-30">
+        <div className="container mx-auto flex gap-6 px-4">
+          {[
+            { id: "portfolio", label: "Portfolio", icon: Image },
+            { id: "drops", label: "Drops", icon: Clock },
+            { id: "settings", label: "Settings", icon: Settings },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              className={`py-4 text-sm tracking-[0.1em] uppercase transition-colors relative ${
+                activeTab === tab.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </span>
+              {activeTab === tab.id && (
+                <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Content */}
       <main className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-2xl">
-            {activeTab === "portfolio" ? "Portfolio Items" : "Timed Drops"}
-          </h1>
-          <Button onClick={() => { setIsCreating(true); setEditingItem(null); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New
-          </Button>
-        </div>
+        {activeTab === "settings" ? (
+          <SettingsForm settings={siteSettings} onSave={saveSettings} />
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="font-display text-2xl">
+                {activeTab === "portfolio" ? "Portfolio Items" : "Timed Drops"}
+              </h1>
+              <Button onClick={() => { setIsCreating(true); setEditingItem(null); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add New
+              </Button>
+            </div>
 
-        {/* Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeTab === "portfolio" ? (
-            portfolioItems.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                className="bg-card border border-border rounded-lg overflow-hidden"
-              >
-                <div className="aspect-[4/3] bg-muted relative">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                  {item.isVideo && (
-                    <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                      Video
-                    </span>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-display text-lg">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.year} • {item.category}</p>
-                  <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline" onClick={() => setEditingItem(item)}>
-                      <Edit3 className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => deletePortfolioItem(item.id)}>
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            drops.map((drop) => (
-              <motion.div
-                key={drop.id}
-                layout
-                className="bg-card border border-border rounded-lg overflow-hidden"
-              >
-                <div className="aspect-[4/3] bg-muted relative">
-                  <img src={drop.image} alt={drop.title} className="w-full h-full object-cover" />
-                  <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded ${
-                    drop.status === "available" ? "bg-green-600 text-white" :
-                    drop.status === "upcoming" ? "bg-primary text-primary-foreground" :
-                    "bg-muted-foreground text-background"
-                  }`}>
-                    {drop.status === "available" ? `${drop.remaining} left` : 
-                     drop.status === "upcoming" ? "Coming Soon" : "Sold Out"}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-display text-lg">{drop.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Edition of {drop.edition} • ${drop.price.toLocaleString()}
-                  </p>
-                  <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline" onClick={() => setEditingItem(drop)}>
-                      <Edit3 className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => deleteDrop(drop.id)}>
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
+            {/* Items Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeTab === "portfolio" ? (
+                portfolioItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    className="bg-card border border-border rounded-lg overflow-hidden"
+                  >
+                    <div className="aspect-[4/3] bg-muted relative">
+                      {item.images[0]?.type === "video" ? (
+                        <video src={item.images[0].url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={item.images[0]?.url || "/placeholder.svg"} alt={item.title} className="w-full h-full object-cover" />
+                      )}
+                      {item.images.length > 1 && (
+                        <span className="absolute top-2 left-2 bg-background/80 text-foreground text-xs px-2 py-1 rounded">
+                          +{item.images.length - 1} more
+                        </span>
+                      )}
+                      {item.images.some(img => img.type === "video") && (
+                        <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded flex items-center gap-1">
+                          <Video className="w-3 h-3" />
+                          Video
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-display text-lg">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.year} • {item.category}</p>
+                      <div className="flex gap-2 mt-4">
+                        <Button size="sm" variant="outline" onClick={() => setEditingItem(item)}>
+                          <Edit3 className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => deletePortfolioItem(item.id)}>
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                drops.map((drop) => (
+                  <motion.div
+                    key={drop.id}
+                    layout
+                    className="bg-card border border-border rounded-lg overflow-hidden"
+                  >
+                    <div className="aspect-[4/3] bg-muted relative">
+                      {drop.images[0]?.type === "video" ? (
+                        <video src={drop.images[0].url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={drop.images[0]?.url || "/placeholder.svg"} alt={drop.title} className="w-full h-full object-cover" />
+                      )}
+                      <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded ${
+                        drop.status === "available" ? "bg-green-600 text-white" :
+                        drop.status === "upcoming" ? "bg-primary text-primary-foreground" :
+                        "bg-muted-foreground text-background"
+                      }`}>
+                        {drop.status === "available" ? `${drop.remaining} left` : 
+                         drop.status === "upcoming" ? "Coming Soon" : "Sold Out"}
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-display text-lg">{drop.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Edition of {drop.edition} • ${drop.price.toLocaleString()}
+                      </p>
+                      <div className="flex gap-2 mt-4">
+                        <Button size="sm" variant="outline" onClick={() => setEditingItem(drop)}>
+                          <Edit3 className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => deleteDrop(drop.id)}>
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       {/* Edit/Create Modal */}
       <AnimatePresence>
-        {(editingItem || isCreating) && (
+        {(editingItem || isCreating) && activeTab !== "settings" && (
           <motion.div
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-card border border-border rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
-              <div className="p-6 border-b border-border flex items-center justify-between">
+              <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card">
                 <h2 className="font-display text-xl">
                   {isCreating ? "Add New" : "Edit"} {activeTab === "portfolio" ? "Portfolio Item" : "Drop"}
                 </h2>
@@ -349,17 +350,29 @@ const PortfolioForm = ({
 }) => {
   const [formData, setFormData] = useState<PortfolioItem>(item || {
     id: "",
-    image: "",
+    images: [],
     title: "",
     year: new Date().getFullYear().toString(),
     category: "Abstract",
     description: "",
-    isVideo: false,
-    videoSrc: "",
   });
 
+  const handleImagesChange = (images: MediaItem[]) => {
+    setFormData({ ...formData, images });
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-6 space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-6 space-y-6">
+      <div>
+        <label className="text-sm text-muted-foreground block mb-3">Media (Images & Videos)</label>
+        <ImageUploader
+          images={formData.images}
+          onChange={handleImagesChange}
+          maxItems={10}
+          allowVideo={true}
+        />
+      </div>
+
       <div>
         <label className="text-sm text-muted-foreground block mb-2">Title</label>
         <Input
@@ -368,15 +381,7 @@ const PortfolioForm = ({
           required
         />
       </div>
-      <div>
-        <label className="text-sm text-muted-foreground block mb-2">Image URL</label>
-        <Input
-          value={formData.image}
-          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-          placeholder="/src/assets/sculpture-1.jpg"
-          required
-        />
-      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-muted-foreground block mb-2">Year</label>
@@ -396,9 +401,12 @@ const PortfolioForm = ({
             <option>Biomechanical</option>
             <option>Figurative</option>
             <option>Organic Forms</option>
+            <option>Surreal</option>
+            <option>Dark Fantasy</option>
           </select>
         </div>
       </div>
+
       <div>
         <label className="text-sm text-muted-foreground block mb-2">Description</label>
         <Textarea
@@ -407,31 +415,12 @@ const PortfolioForm = ({
           rows={3}
         />
       </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="isVideo"
-          checked={formData.isVideo}
-          onChange={(e) => setFormData({ ...formData, isVideo: e.target.checked })}
-          className="rounded border-border"
-        />
-        <label htmlFor="isVideo" className="text-sm">This is a video</label>
-      </div>
-      {formData.isVideo && (
-        <div>
-          <label className="text-sm text-muted-foreground block mb-2">Video URL</label>
-          <Input
-            value={formData.videoSrc || ""}
-            onChange={(e) => setFormData({ ...formData, videoSrc: e.target.value })}
-            placeholder="https://..."
-          />
-        </div>
-      )}
+
       <div className="flex gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           Cancel
         </Button>
-        <Button type="submit" className="flex-1">
+        <Button type="submit" className="flex-1" disabled={formData.images.length === 0}>
           <Save className="w-4 h-4 mr-2" />
           Save
         </Button>
@@ -452,7 +441,7 @@ const DropForm = ({
 }) => {
   const [formData, setFormData] = useState<Drop>(drop || {
     id: "",
-    image: "",
+    images: [],
     title: "",
     edition: 25,
     price: 1000,
@@ -462,8 +451,22 @@ const DropForm = ({
     remaining: 25,
   });
 
+  const handleImagesChange = (images: MediaItem[]) => {
+    setFormData({ ...formData, images });
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-6 space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="p-6 space-y-6">
+      <div>
+        <label className="text-sm text-muted-foreground block mb-3">Media (Images & Videos)</label>
+        <ImageUploader
+          images={formData.images}
+          onChange={handleImagesChange}
+          maxItems={10}
+          allowVideo={true}
+        />
+      </div>
+
       <div>
         <label className="text-sm text-muted-foreground block mb-2">Title</label>
         <Input
@@ -472,26 +475,16 @@ const DropForm = ({
           required
         />
       </div>
-      <div>
-        <label className="text-sm text-muted-foreground block mb-2">Image URL</label>
-        <Input
-          value={formData.image}
-          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-          placeholder="/src/assets/sculpture-1.jpg"
-          required
-        />
-      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-muted-foreground block mb-2">Edition Size</label>
-          <select
+          <Input
+            type="number"
             value={formData.edition}
-            onChange={(e) => setFormData({ ...formData, edition: Number(e.target.value) })}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value={25}>25 pieces</option>
-            <option value={50}>50 pieces</option>
-          </select>
+            onChange={(e) => setFormData({ ...formData, edition: Number(e.target.value), remaining: Number(e.target.value) })}
+            min={1}
+          />
         </div>
         <div>
           <label className="text-sm text-muted-foreground block mb-2">Price ($)</label>
@@ -499,9 +492,11 @@ const DropForm = ({
             type="number"
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+            min={0}
           />
         </div>
       </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-muted-foreground block mb-2">Status</label>
@@ -530,10 +525,13 @@ const DropForm = ({
               type="number"
               value={formData.remaining || formData.edition}
               onChange={(e) => setFormData({ ...formData, remaining: Number(e.target.value) })}
+              min={0}
+              max={formData.edition}
             />
           )}
         </div>
       </div>
+
       <div>
         <label className="text-sm text-muted-foreground block mb-2">Description</label>
         <Textarea
@@ -542,13 +540,151 @@ const DropForm = ({
           rows={3}
         />
       </div>
+
       <div className="flex gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           Cancel
         </Button>
-        <Button type="submit" className="flex-1">
+        <Button type="submit" className="flex-1" disabled={formData.images.length === 0}>
           <Save className="w-4 h-4 mr-2" />
           Save
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+// Settings Form Component
+const SettingsForm = ({ 
+  settings, 
+  onSave 
+}: { 
+  settings: SiteSettings;
+  onSave: (settings: SiteSettings) => void;
+}) => {
+  const [formData, setFormData] = useState<SiteSettings>(settings);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
+      <div>
+        <h2 className="font-display text-2xl mb-6">Site Settings</h2>
+        
+        {/* Branding */}
+        <div className="space-y-4 mb-8">
+          <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground border-b border-border pb-2">
+            Branding
+          </h3>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">Hero Title</label>
+            <Input
+              value={formData.heroTitle}
+              onChange={(e) => setFormData({ ...formData, heroTitle: e.target.value })}
+              placeholder="Sculpting the Shadows"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">Hero Subtitle</label>
+            <Textarea
+              value={formData.heroSubtitle}
+              onChange={(e) => setFormData({ ...formData, heroSubtitle: e.target.value })}
+              placeholder="Where darkness meets elegance..."
+              rows={2}
+            />
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">Brand Tagline (Footer)</label>
+            <Textarea
+              value={formData.brandTagline}
+              onChange={(e) => setFormData({ ...formData, brandTagline: e.target.value })}
+              placeholder="Sculptural art that dwells..."
+              rows={2}
+            />
+          </div>
+        </div>
+
+        {/* Contact */}
+        <div className="space-y-4 mb-8">
+          <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground border-b border-border pb-2 flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            Contact
+          </h3>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">Email Address</label>
+            <Input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="contact@mrtz.art"
+            />
+          </div>
+        </div>
+
+        {/* Social Links */}
+        <div className="space-y-4 mb-8">
+          <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground border-b border-border pb-2 flex items-center gap-2">
+            <Instagram className="w-4 h-4" />
+            Social Links
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-muted-foreground block mb-2">Instagram URL</label>
+              <Input
+                value={formData.instagram}
+                onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                placeholder="https://instagram.com/..."
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground block mb-2">Twitter/X URL</label>
+              <Input
+                value={formData.twitter}
+                onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                placeholder="https://twitter.com/..."
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground block mb-2">TikTok URL</label>
+              <Input
+                value={formData.tiktok}
+                onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })}
+                placeholder="https://tiktok.com/@..."
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground block mb-2">YouTube URL</label>
+              <Input
+                value={formData.youtube}
+                onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* About */}
+        <div className="space-y-4 mb-8">
+          <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground border-b border-border pb-2">
+            About Page Content
+          </h3>
+          <div>
+            <label className="text-sm text-muted-foreground block mb-2">About Text</label>
+            <Textarea
+              value={formData.aboutText}
+              onChange={(e) => setFormData({ ...formData, aboutText: e.target.value })}
+              placeholder="Tell your story..."
+              rows={6}
+            />
+          </div>
+        </div>
+
+        <Button type="submit" className="w-full md:w-auto">
+          <Save className="w-4 h-4 mr-2" />
+          Save Settings
         </Button>
       </div>
     </form>
